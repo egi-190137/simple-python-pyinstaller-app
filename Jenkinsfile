@@ -10,5 +10,18 @@ node {
         stage('Test') {
             sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'           
         }
+        stage('Manual Approval') {
+            input message: 'Lanjutkan ke tahap Deploy?”'
+        }
+    }
+}
+node {
+    docker.image('cdrx/pyinstaller-linux:python2').inside('-p 8000:8000') {
+        stage('Deploy') {
+            sh 'pyinstaller --onefile sources/add2vals.py'
+            sh 'echo $! > .pidfile'
+            sh 'sleep 1m'
+            sh 'kill $(.pidfile)'
+        }
     }
 }
